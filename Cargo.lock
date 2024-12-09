@@ -8,7 +8,7 @@ version = "9.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac42a04a61c19fc8196dd728022a784baecc5d63d7e256c01ad1b3fbfab26287"
 dependencies = [
- "tock-registers",
+ "tock-registers 0.8.1",
 ]
 
 [[package]]
@@ -128,7 +128,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47d25e73c949c69f75d1b9dba39c5475523403b31eb8c2fdc99da4dc33bc1aca"
 dependencies = [
- "tock-registers",
+ "tock-registers 0.8.1",
 ]
 
 [[package]]
@@ -137,7 +137,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "efcf6afca4502993a737ba1e00952d1321078689da92bf7aab27d4e5756c0bec"
 dependencies = [
- "tock-registers",
+ "tock-registers 0.8.1",
 ]
 
 [[package]]
@@ -225,6 +225,7 @@ dependencies = [
  "axdriver_virtio",
  "axhal",
  "cfg-if",
+ "igb-driver",
  "log",
 ]
 
@@ -392,7 +393,7 @@ dependencies = [
  "riscv_goldfish",
  "sbi-rt",
  "static_assertions",
- "tock-registers",
+ "tock-registers 0.8.1",
  "x2apic",
  "x86",
  "x86_64 0.15.1",
@@ -525,6 +526,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bare-test-macros"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d6f42aee6d91e826a85847fbf1c87ea711dcceb4feade4ceb44e657ca1e6af1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.70",
+]
+
+[[package]]
 name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -537,7 +549,7 @@ source = "git+https://github.com/lhw2002426/bcm2835-sdhci.git?rev=e974f16#e974f1
 dependencies = [
  "aarch64-cpu",
  "log",
- "tock-registers",
+ "tock-registers 0.8.1",
  "volatile 0.2.7",
 ]
 
@@ -756,12 +768,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dma-api"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a0dd9af7c2cbebd25dc78e2e8e0f11f52185c4d2d180cd4d1310a596bd8a47d"
+
+[[package]]
 name = "dw_apb_uart"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f93d496c8faa9dc676ebfa225432e1e3b57645c9268ead889286546f6d39356d"
 dependencies = [
- "tock-registers",
+ "tock-registers 0.8.1",
 ]
 
 [[package]]
@@ -872,6 +890,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "igb-driver"
+version = "0.1.0"
+dependencies = [
+ "axdriver_net",
+ "bare-test-macros",
+ "dma-api",
+ "log",
+ "tock-registers 0.9.0",
 ]
 
 [[package]]
@@ -1476,6 +1505,12 @@ name = "tock-registers"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "696941a0aee7e276a165a978b37918fd5d22c55c3d6bda197813070ca9c0f21c"
+
+[[package]]
+name = "tock-registers"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b9e2fdb3a1e862c0661768b7ed25390811df1947a8acbfbefe09b47078d93c4"
 
 [[package]]
 name = "toml_datetime"
