@@ -131,9 +131,48 @@ cfg_if::cfg_if! {
 
 cfg_if::cfg_if! {
     if #[cfg(net_dev = "igb")] {
-        use axhal::mem::phys_to_virt;
+        use axdma::{alloc_coherent, dealloc_coherent, BusAddr, DMAInfo};
+        use igb_driver::IgbHal;
+        use axhal::mem::{phys_to_virt, virt_to_phys};
+        use core::{alloc::Layout, ptr::NonNull};
+        pub struct IgbHalImpl;
+        unsafe impl IgbHal for IgbHalImpl {
+            fn dma_alloc(size: usize) -> (usize, NonNull<u8>) {
+                let layout = Layout::from_size_align(size, 8).unwrap();
+                match unsafe { alloc_coherent(layout) } {
+                    Ok(dma_info) => (dma_info.bus_addr.as_u64() as usize, dma_info.cpu_addr),
+                    Err(_) => (0, NonNull::dangling()),
+                }
+            }
+
+            unsafe fn dma_dealloc(paddr: usize, vaddr: NonNull<u8>, size: usize) -> i32 {
+                let layout = Layout::from_size_align(size, 8).unwrap();
+                let dma_info = DMAInfo {
+                    cpu_addr: vaddr,
+                    bus_addr: BusAddr::from(paddr as u64),
+                };
+                unsafe { dealloc_coherent(dma_info, layout) };
+                0
+            }
+
+            unsafe fn mmio_phys_to_virt(paddr: usize, _size: usize) -> NonNull<u8> {
+                NonNull::new(phys_to_virt(paddr.into()).as_mut_ptr()).unwrap()
+            }
+
+            unsafe fn mmio_virt_to_phys(vaddr: NonNull<u8>, _size: usize) -> usize {
+                virt_to_phys((vaddr.as_ptr() as usize).into()).into()
+            }
+
+            fn wait_until(duration: core::time::Duration) -> Result<(), &'static str> {
+                axhal::time::busy_wait_until(duration);
+                Ok(())
+            }
+        }
+
         pub struct IgbDriver;
-        register_net_driver!(IgbDriver, igb_driver::IgbDevice);
+        const QN: u16 = 1;
+        const QS: usize = 1024;
+        register_net_driver!(IgbDriver, igb_driver::IgbNic<IgbHalImpl, QS, QN>);
         impl DriverProbe for IgbDriver {
             #[cfg(bus = "pci")]
             fn probe_pci(
@@ -142,22 +181,21 @@ cfg_if::cfg_if! {
                 dev_info: &axdriver_pci::DeviceFunctionInfo,
             ) -> Option<crate::AxDeviceEnum> {
                 use igb_driver::{INTEL_82576, INTEL_VEND};
+                use igb_driver::IgbNic;
                 if dev_info.vendor_id == INTEL_VEND && dev_info.device_id == INTEL_82576 {
                     info!("igb PCI device found at {:?}", bdf);
 
-                    //     // Initialize the device
-                    //     // These can be changed according to the requirments specified in the ixgbe init function.
-                    //     const QN: u16 = 1;
-                    //     const QS: usize = 1024;
+                    // Initialize the device
+                    // These can be changed according to the requirements specified in the igb init function.
                     let bar_info = root.bar_info(bdf, 0).unwrap();
                     match bar_info {
                         axdriver_pci::BarInfo::Memory { address, size, .. } => {
-                            let igb_dev = igb_driver::IgbDevice::init(
+                            let igb_nic = IgbNic::<IgbHalImpl, QS, QN>::init(
                                 phys_to_virt((address as usize).into()).into(),
-                                size as usize,
+                                size as usize
                             )
                             .expect("failed to initialize igb device");
-                            return Some(AxDeviceEnum::from_net(igb_dev));
+                            return Some(AxDeviceEnum::from_net(igb_nic));
                         }
                         axdriver_pci::BarInfo::IO { .. } => {
                             error!("igb: BAR0 is of I/O type");

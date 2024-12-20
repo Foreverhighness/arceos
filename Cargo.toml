@@ -62,7 +62,8 @@ axsync = { path = "modules/axsync" }
 axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 
-igb-driver = { path = "../igb-driver" }
+# igb-driver = { path = "../igb-driver" }
+igb-driver = { path = "../ixgbe-driver" }
 
 [profile.release]
 lto = true
